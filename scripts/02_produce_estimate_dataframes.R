@@ -39,13 +39,18 @@ blocks = st_transform(blocks,6558)
 counties=st_read(here('data/clean_counties.gpkg'))
 
 mpos = st_read(here('data/clean_mpo_boundaries.gpkg'))
+
 mpos = mpos %>%
+  filter(str_detect(mpo_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Middle Rogue|Rogue Valley|METRO|Salem'))  %>%
   mutate(mpo_name = case_when(str_detect(mpo_name,"Albany") ~ "Albany",
                               str_detect(mpo_name,"Bend") ~ "Bend",
                               str_detect(mpo_name,"Central Lane") ~ "Central Lane",
                               str_detect(mpo_name,"Corvallis") ~ "Corvallis",
+                              str_detect(mpo_name,"Eugene/Springfield") ~ "Eugene/Springfield",
+                              str_detect(mpo_name,"Eugene-Springfield") ~ "Eugene/Springfield",
                               str_detect(mpo_name,"Middle Rogue") ~ "Middle Rogue",
                               str_detect(mpo_name,"Salem-Keizer") ~ "Salem-Keizer",
+                              str_detect(mpo_name,"Salem/Keizer") ~ "Salem-Keizer",
                               str_detect(mpo_name,"Rogue Valley") ~ "Rogue Valley",
                               str_detect(mpo_name,"METRO") ~ "Portland Metro"))
 
@@ -56,7 +61,6 @@ uas = uas %>%
 }
 
 
-
 parse_mpo_ua = function(blocks,mpos,uas,counties,yearid){
 
   if (st_crs(mpos) != st_crs(uas)) stop("st_crs(mpos) != st_crs(uas)")
@@ -65,7 +69,7 @@ parse_mpo_ua = function(blocks,mpos,uas,counties,yearid){
 
   blocks = blocks %>%
     filter(year==yearid) %>%
-    st_as_sf()
+    st_as_sf() 
   counties = counties %>%
     filter(year==yearid) %>%
     st_as_sf()
@@ -209,7 +213,9 @@ mpo_totals %>%
                                                  mpo_name =="Rogue Valley" ~"NO",
                                                  mpo_name =="Central Lane" ~"NO",
                                                  mpo_name =="Portland Metro" ~"NO",
-                                                 mpo_name =="Salem-Keizer" ~"NO")) %>%
+                                                 mpo_name =="Salem-Keizer" ~"NO",
+                                                 mpo_name =="Eugene/Springfield" ~"YES")
+         ) %>%
   fwrite(here('results/clean/2025_mpo_totals.csv'))
 
 ua_totals %>%
@@ -227,20 +233,11 @@ uas %>%
   filter(year != "2000") %>%
   ggplot() +
   geom_sf(aes(colour=year),fill=NA) +
-  scale_colour_manual(values = c("darkred","darkblue")) +
+  scale_colour_manual(values = c("darkred","darkblue","goldenrod")) +
   theme_void() +
   facet_wrap(~ua_name,ncol=4)
 ggsave(here('results/compare_boundaries/uas.png'),width = 8,height=8,unit="in",dpi=350)
 
-
-uas %>%
-  filter(year != "2000") %>%
-  ggplot() +
-  geom_sf(aes(colour=year),fill=NA) +
-  scale_colour_manual(values = c("darkred","darkblue")) +
-  theme_void() +
-  facet_wrap(~ua_name,ncol=4)
-ggsave(here('results/compare_boundaries/uas.png'),width = 8,height=8,unit="in",dpi=350)
 
 ggplot() +
   geom_sf(data=counties %>% filter(cname %in% ua_by_co$cname), colour="grey10",fill=NA) +
