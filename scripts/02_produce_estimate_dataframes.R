@@ -20,13 +20,13 @@
 
 
 #Instructions for project:
-# Gather geographic datasets (last three most recent Decennial Census joined to block
-#                             boundaries, County boundaries, MPO boundaries, UA boundaries)
+# Gather geographic datasets (last three most recent Decennial Census 
+# joined to block boundaries, County boundaries, MPO boundaries, UA boundaries)
 #  Convert Census block polygons to centroids with population values
 #  Split desired MPO and UA boundaries by County lines to create
 # new MPO_by_Co and UA_by_Co datasets
-#  Compare most recent resulting dataset boundaries to previous years' boundaries, note
-#   discrepancies/changes
+#  Compare most recent resulting dataset boundaries to previous years' 
+# boundaries, note discrepancies/changes
 #  Spatial summarize four versions of Census block population centroids
 # into MPO, UA,  MPO_by_Co and UA_by_Co datasets 
 
@@ -35,58 +35,45 @@
 {
 blocks = st_read(here('data/clean_blocks/combined_block_centroids.gpkg'))
 blocks = st_transform(blocks,6558)
+# blocks %>%
+#   group_by(year) %>%
+#   reframe(sum=sum(value))
 
 counties=st_read(here('data/clean_counties.gpkg'))
-
 mpos = st_read(here('data/clean_mpo_boundaries.gpkg'))
-
-mpos = mpos %>%
-  filter(str_detect(mpo_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Middle Rogue|Rogue Valley|METRO|Salem'))  %>%
-  mutate(mpo_name = case_when(str_detect(mpo_name,"Albany") ~ "Albany",
-                              str_detect(mpo_name,"Bend") ~ "Bend",
-                              str_detect(mpo_name,"Central Lane") ~ "Central Lane",
-                              str_detect(mpo_name,"Corvallis") ~ "Corvallis",
-                              str_detect(mpo_name,"Eugene/Springfield") ~ "Eugene/Springfield",
-                              str_detect(mpo_name,"Eugene-Springfield") ~ "Eugene/Springfield",
-                              str_detect(mpo_name,"Middle Rogue") ~ "Middle Rogue",
-                              str_detect(mpo_name,"Salem-Keizer") ~ "Salem-Keizer",
-                              str_detect(mpo_name,"Salem/Keizer") ~ "Salem-Keizer",
-                              str_detect(mpo_name,"Rogue Valley") ~ "Rogue Valley",
-                              str_detect(mpo_name,"METRO") ~ "Portland Metro"))
-
 uas = st_read(here('data/clean_UA_boundaries.gpkg'))
 uas = uas %>%
-  rename(ua_name = name) %>%
-  filter(str_detect(ua_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Medford|Portland|Salem'))
+  rename(ua_name = name)
 }
 
+#new crs? 6823?
+
+unique(mpos$year)
+unique(uas$year)
 
 parse_mpo_ua = function(blocks,mpos,uas,counties,yearid){
 
-  if (st_crs(mpos) != st_crs(uas)) stop("st_crs(mpos) != st_crs(uas)")
-  if (st_crs(mpos) != st_crs(blocks)) stop("st_crs(mpos) != st_crs(blocks)")
-  if (st_crs(mpos) != st_crs(counties)) stop("st_crs(mpos) != st_crs(counties)")
+    if (st_crs(mpos) != st_crs(uas)) stop("st_crs(mpos) != st_crs(uas)")
+    if (st_crs(mpos) != st_crs(blocks)) stop("st_crs(mpos) != st_crs(blocks)")
+    if (st_crs(mpos) != st_crs(counties)) stop("st_crs(mpos) != st_crs(counties)")
+  
+    blocks = blocks %>%
+      filter(year==yearid) %>%
+      st_as_sf() 
+    counties = counties %>%
+      filter(year==yearid) %>%
+      st_as_sf()
+    uas = uas %>%
+      filter(year==yearid) %>%
+      st_as_sf()
+    mpos = mpos %>%
+      filter(year==yearid) %>%
+      st_as_sf()
 
-  blocks = blocks %>%
-    filter(year==yearid) %>%
-    st_as_sf() 
-  counties = counties %>%
-    filter(year==yearid) %>%
-    st_as_sf()
-  uas = uas %>%
-    filter(year==yearid) %>%
-    st_as_sf()
-  mpos = mpos %>%
-    filter(year==yearid) %>%
-    st_as_sf()
-
-
-
-  if(yearid!="2000"){ #because we don't have any MPO data for 2000 as of yet
-
+  if(yearid != "2000"){ #MPOs didn't exist in 2000, really pre-2009
     #blocks in MPO boundaries
     mpo_totals = st_intersection(blocks,mpos)
-
+    
     #blocks in county boundaries
     mpo_by_co = st_intersection(mpo_totals,counties)
 
@@ -114,16 +101,13 @@ parse_mpo_ua = function(blocks,mpos,uas,counties,yearid){
 
     fwrite(mpo_totals,here(paste0('data/clean_csvs/mpo_totals_',yearid,'.csv')))
 
-
   }
-
-  if(yearid!="2025"){ #because UAs don't have a 2025 update
-
+    
+  if(yearid != "2025"){   #no UA updates for 2025
     #blocks in UA boundaries
     ua_totals = st_intersection(blocks,uas)
     #blocks in county boundaries
     ua_by_co = st_intersection(ua_totals,counties)
-
 
     ua_totals =
       ua_totals %>%
@@ -139,16 +123,12 @@ parse_mpo_ua = function(blocks,mpos,uas,counties,yearid){
 
     fwrite(ua_totals,here(paste0('data/clean_csvs/ua_totals_',yearid,'.csv')))
     fwrite(ua_by_co,here(paste0('data/clean_csvs/ua_by_co_',yearid,'.csv')))
-
-  }
-
+}
 
 }
 
-
-
 #CSVs only
-years = c("2000","2010","2020","2025")
+years = c("2000","2010","2020")
 
 for (i in 1:length(years)){
   print(years[i])
@@ -164,37 +144,34 @@ temp <- list.files(
   pattern = "*\\.csv$",
   full.names = TRUE)
 
-mpo_by_co = map_dfr(temp[1:3],
+mpo_by_co = map_dfr(temp[1:2],
                     fread)
 
-mpo_totals = map_dfr(temp[4:6],
+mpo_totals = map_dfr(temp[3:4],
                      fread)
 
-ua_by_co = map_dfr(temp[7:9],
+ua_by_co = map_dfr(temp[5:7],
                    fread)
 
-ua_totals = map_dfr(temp[10:12],
+ua_totals = map_dfr(temp[8:10],
                     fread)
-
 
 mpo_by_co %>%
   arrange(desc(year)) %>%
   pivot_wider(names_from = year,values_from = estimate) %>%
   rename(county_name=cname,
-         #population_2000=`2000`, #no data for this year yet
-         population_2010=`2010`,
-         population_2020=`2020`,
-         population_2025=`2025`) %>%
+         population_2000=`2010`, #no data for this 2000!
+         population_2010=`2020`) %>%
   fwrite(here('results/clean/2025_mpo_by_co.csv'))
 
 ua_by_co %>%
   arrange(desc(year)) %>%
   arrange(ua_name) %>%
-  pivot_wider(names_from = year,values_from = estimate) %>%
+  pivot_wider(names_from = year,values_from = estimate) %>% 
   rename(county_name=cname,
          population_2000=`2000`,
          population_2010=`2010`,
-         population_2020=`2020`) %>%
+         population_2020=`2020`) %>% 
   fwrite(here('results/clean/2025_ua_by_co.csv'))
 
 #will identify boundary changes by hand
@@ -202,10 +179,8 @@ mpo_totals %>%
   arrange(desc(year)) %>%
   pivot_wider(names_from = year,values_from = estimate) %>%
   rename(
-         #population_2000=`2000`,
-         population_2010=`2010`,
-         population_2020=`2020`,
-         population_2025=`2025`) %>%
+         population_2000=`2010`,
+         population_2010=`2020`) %>%
   mutate(significant_boundary_change = case_when(mpo_name =="Bend" ~"YES",  #verified by hand below
                                                  mpo_name =="Corvallis" ~"YES",
                                                  mpo_name =="Albany" ~"YES",
@@ -219,7 +194,7 @@ mpo_totals %>%
   fwrite(here('results/clean/2025_mpo_totals.csv'))
 
 ua_totals %>%
-  #filter(str_detect(ua_name,'Albany|Bend|Corvallis|Eugene|rants Pass|Medford|Portland|Salem')) %>%
+  #filter(str_detect(ua_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Medford|Portland|Salem')) %>%
   arrange(desc(year)) %>%
   pivot_wider(names_from = year,values_from = estimate) %>%
   rename(population_2000=`2000`,
@@ -230,13 +205,13 @@ ua_totals %>%
 
 #boundary changes for uas
 uas %>%
-  filter(year != "2000") %>%
+  #filter(year != "2000") %>%
   ggplot() +
   geom_sf(aes(colour=year),fill=NA) +
   scale_colour_manual(values = c("darkred","darkblue","goldenrod")) +
   theme_void() +
-  facet_wrap(~ua_name,ncol=4)
-ggsave(here('results/compare_boundaries/uas.png'),width = 8,height=8,unit="in",dpi=350)
+  facet_wrap(~ua_name+year)
+ggsave(here('results/compare_boundaries/uas.png'),width = 10,height=10,unit="in",dpi=350)
 
 
 ggplot() +
@@ -250,7 +225,23 @@ ggplot() +
   geom_sf_text(data=uas %>% select(ua_name,geom) %>% distinct(),aes(label=ua_name),size=1) +
   theme_void()
 
-ggsave(here('results/compare_boundaries/uas_by_county_2000_2010_2020.png'),width = 8,height=8,unit="in",dpi=350)
+ggsave(here('results/compare_boundaries/uas_by_county_2000_2010_2020.png'),width = 10,height=10,unit="in",dpi=350)
+
+ggplot() +
+  geom_sf(data=counties %>% filter(cname %in% ua_by_co$cname, year!="2025"), colour="grey10",fill=NA) +
+  #  geom_sf_text(data=uas %>% select(ua_name,geometry) %>% distinct,aes(label=ua_name)) +
+  geom_sf(data=uas, aes(colour=year),fill=NA) +
+  scale_colour_manual(values = rev(c("goldenrod","darkred","darkblue"))) +
+  geom_sf_text(data =counties%>% filter(cname %in% ua_by_co$cname, year!="2025") %>% distinct(),aes(label=cname),size=1) +
+  geom_sf_text(data=uas %>% filter(year=="2020") %>% distinct(),aes(label=ua_name),size=1) +
+  geom_sf_text(data=uas %>% filter(year=="2010") %>% distinct(),aes(label=ua_name),size=1) +
+  geom_sf_text(data=uas %>% filter(year=="2000") %>% group_by(ua_name) %>% slice_head(n = 1),aes(label=ua_name),size=1) +
+  theme_void() +
+  facet_wrap(~year)
+ggsave(here('results/compare_boundaries/uas_by_county_2000_2010_2020_simple.png'),width = 10,height=10,unit="in",dpi=350)
+
+
+
 
 ggplot() +
   geom_sf(data=counties %>% filter(cname %in% ua_by_co$cname), colour="grey10",fill=NA) +
@@ -263,8 +254,22 @@ ggplot() +
   geom_sf_text(data=mpos %>% filter(year=="2010"),aes(label=mpo_name),size=1) +
   geom_sf_text(data=mpos %>% filter(year=="2020"),aes(label=mpo_name),size=1) +
   geom_sf_text(data=mpos %>% filter(year=="2025"),aes(label=mpo_name),size=1) +
-  theme_void()
+  theme_void() 
 ggsave(here('results/compare_boundaries/mpo_by_county_2010_2020_2025.png'),width = 10,height=10,unit="in",dpi=350)
+
+ggplot() +
+  geom_sf(data=counties %>% filter(cname %in% ua_by_co$cname, year !="2025",year!="2000"), colour="grey10",fill=NA) +
+  #  geom_sf_text(data=uas %>% select(ua_name,geometry) %>% distinct,aes(label=ua_name)) +
+  geom_sf(data=mpos %>% filter(year !="2025",year!="2000"), aes(colour=year),fill=NA) +
+  scale_colour_manual(values = rev(c("goldenrod","darkred","darkblue"))) +
+  geom_sf_text(data =counties%>% filter(cname %in% ua_by_co$cname, year !="2025",year!="2000"),aes(label=cname),size=1) +
+  geom_sf_text(data=mpos %>% filter(year=="2020"),aes(label=mpo_name),size=1) +
+  geom_sf_text(data=mpos %>% filter(year=="2010"),aes(label=mpo_name),size=1) +
+  theme_void() +
+  facet_wrap(~year)
+ggsave(here('results/compare_boundaries/mpo_by_county_2010_2020_simple.png'),width = 10,height=10,unit="in",dpi=350)
+
+
 
 # temp10 = st_difference(uas %>% filter(year=="2010"),counties %>% filter(year=="2010"))
 # temp10 = unique(temp10$geometry)

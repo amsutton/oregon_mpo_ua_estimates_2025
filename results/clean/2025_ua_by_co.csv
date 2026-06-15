@@ -1,12 +1,12 @@
 ua_name,county_name,population_2020,population_2010,population_2000
-"Albany, OR",Benton,9948,7073,4726
-"Albany, OR",Linn,52133,46804,36934
+"Albany, OR",Benton,9948,7073,
+"Albany, OR",Linn,52133,46804,
 "Albany, OR",Marion,,3100,
 "Bend, OR",Deschutes,106884,83629,57057
 "Corvallis, OR",Benton,66585,61922,58098
 "Eugene, OR",Lane,270098,246973,222969
-"Grants Pass, OR",Jackson,5374,4433,4120
-"Grants Pass, OR",Josephine,49867,45246,38563
+"Grants Pass, OR",Jackson,5374,4433,
+"Grants Pass, OR",Josephine,49867,45246,
 "Medford, OR",Jackson,171025,153362,127724
 "Portland, OR--WA",Clackamas,301166,264687,234048
 "Portland, OR--WA",Marion,5926,232,250

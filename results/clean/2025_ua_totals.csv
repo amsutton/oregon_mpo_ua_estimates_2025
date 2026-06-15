@@ -1,9 +1,9 @@
 ua_name,population_2020,population_2010,population_2000,significant_boundary_change
-"Albany, OR",62081,56977,41660,YES
+"Albany, OR",62081,56977,,YES
 "Bend, OR",106884,83629,57057,YES
 "Corvallis, OR",66585,61922,58098,YES
 "Eugene, OR",270098,246973,222969,YES
-"Grants Pass, OR",55241,49679,42683,YES
+"Grants Pass, OR",55241,49679,,YES
 "Medford, OR",171025,153362,127724,YES
 "Portland, OR--WA",1678105,1489293,1296705,YES
 "Salem, OR",268101,236358,206682,YES

@@ -25,14 +25,14 @@ here::i_am('scripts/01_get_data_and_clean.R')
 
 
 #Instructions for project:
-# Gather geographic datasets (last three most recent Decennial Census joined to block
-#                             boundaries, County boundaries, MPO boundaries, UA boundaries)
-#  Convert Census block polygons to centroids with population values
-#  Split desired MPO and UA boundaries by County lines to create
+# 1. Gather geographic datasets (last three most recent Decennial Census joined to block
+# boundaries, County boundaries, MPO boundaries, UA boundaries)
+# 2. Convert Census block polygons to centroids with population values
+# 3. Split desired MPO and UA boundaries by County lines to create
 # new MPO_by_Co and UA_by_Co datasets
-#  Compare most recent resulting dataset boundaries to previous years' boundaries, note
-#   discrepancies/changes
-#  Spatial summarize four versions of Census block population centroids
+# 4. Compare most recent resulting dataset boundaries to previous years' boundaries, note
+# discrepancies/changes
+# 5. Spatial summarize four versions of Census block population centroids
 # into MPO, UA,  MPO_by_Co and UA_by_Co datasets 
  
 
@@ -44,34 +44,27 @@ here::i_am('scripts/01_get_data_and_clean.R')
 
 #MPO boundaries as of July 1, 2025 from Oregon GeoHub:
 #https://geohub.oregon.gov/datasets/oregon-geo::metropolitan-planning-organizations/about
-mpo = st_read(here('data/mpo2025/transgis_mpo_export.shp'))
+mpo20 = st_read(here('data/mpo2025/transgis_mpo_export.shp'))
+table(mpo20$NAME)
+# st_crs(mpo)
+# suggest_crs(mpo) #6558 -- NAD83(2011) / Oregon North meters
+mpo20 = st_transform(mpo20,6558)
 
 # #from: https://geodata.bts.gov/datasets/usdot::metropolitan-planning-organizations/about
-# #for now for earlier MPO boundaries
-# mpo2 = st_read(here('data/mpo_bts/Metropolitan_Planning_Organizations.shp'))
-#
-# mpo2 = mpo2 %>%
-#   clean_names() %>%
-#   filter(state=="OR")
-#
-# mpo2 = st_transform(mpo2,6558)
 
 #MPOs were updated in 2009, 2012, 2013, 2015, 2017 and 2024 before the 2025 update.
 #We take the 2009 for 2010 (most recent for that census) and 2017 for the 2020 (ditto).
 mpo10 = st_read('data/mpo.gdb',layer = 'mpo_2009') %>% st_transform(6558)
-mpo20 = st_read('data/mpo.gdb',layer = 'mpo_2017') %>% st_transform(6558)
-#st_layers('data/mpo.gdb')
-# rm(mpo2)
-# gc()
+#mpo20 = st_read('data/mpo.gdb',layer = 'mpo_2017') %>% st_transform(6558)
 
-# st_crs(mpo)
-# suggest_crs(mpo) #6558 -- NAD83(2011) / Oregon North meters
-mpo = st_transform(mpo,6558)
+#st_layers('data/mpo.gdb')
+
+
 
 excludelist= c('Longview/Kelso/Rainier',"Walla Walla Valley")
 `%nin%` = Negate(`%in%`)
-mpo25 = mpo %>%
-  filter(NAME %nin% excludelist)
+# mpo = mpo %>%
+#   filter(NAME %nin% excludelist)
 mpo20 = mpo20 %>%
   filter(NAME %nin% excludelist)
 mpo10 = mpo10 %>%
@@ -83,21 +76,22 @@ mpo10 = mpo10 %>%
 
 
 #tidy up mpo object for easy match and clean later
-mpo25 =
-  mpo25 %>%
+mpo20 =
+  mpo20 %>%
   select(NAME,COUNTY,geometry) %>%
   clean_names() %>%
   rename(mpo_county=county,
          mpo_name=name) %>%
-  mutate(year="2025")
-mpo20 =
-  mpo20 %>%
-  select(NAME,COUNTY,Shape) %>%
-  clean_names() %>%
-  rename(mpo_county=county,
-         mpo_name=name,
-         geometry=Shape) %>%
   mutate(year="2020")
+
+# mpo20 =
+#   mpo20 %>%
+#   select(NAME,COUNTY,Shape) %>%
+#   clean_names() %>%
+#   rename(mpo_county=county,
+#          mpo_name=name,
+#          geometry=Shape) %>%
+#   mutate(year="2020")
 mpo10 =
   mpo10 %>%
   select(NAME,COUNTY,Shape) %>%
@@ -105,15 +99,42 @@ mpo10 =
   rename(mpo_county=county,
          mpo_name=name,
          geometry=Shape) %>%
-  mutate(year="2010")
+  mutate(year="2010",
+         mpo_county = ifelse(mpo_county == "Mult, Clack, Wash","Multnomah/Clackamas/Washington", mpo_county))
 
 
-mpos = rbind(mpo10,mpo20,mpo25)
-mpos = mpos %>%
+mpo = rbind(mpo10,mpo20)
+
+mpo = mpo %>%
   filter(str_detect(mpo_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Middle Rogue|Rogue Valley|METRO|Salem')) %>%
   select(year,everything())
 
-st_write(mpos,here('data/clean_mpo_boundaries.gpkg'),append=FALSE)
+# mpo = mpo %>%
+#   filter(str_detect(mpo_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Middle Rogue|Rogue Valley|METRO|Salem'))  %>%
+#   mutate(mpo_name = case_when(str_detect(mpo_name,"Albany") ~ "Albany",
+#                               str_detect(mpo_name,"Bend") ~ "Bend",
+#                               str_detect(mpo_name,"Central Lane") ~ "Central Lane",
+#                               str_detect(mpo_name,"Corvallis") ~ "Corvallis",
+#                               str_detect(mpo_name,"Eugene/Springfield") ~ "Eugene/Springfield",
+#                               str_detect(mpo_name,"Eugene-Springfield") ~ "Eugene/Springfield",
+#                               str_detect(mpo_name,"Middle Rogue") ~ "Middle Rogue",
+#                               str_detect(mpo_name,"Salem-Keizer") ~ "Salem-Keizer",
+#                               str_detect(mpo_name,"Salem/Keizer") ~ "Salem-Keizer",
+#                               str_detect(mpo_name,"Rogue Valley") ~ "Rogue Valley",
+#                               str_detect(mpo_name,"METRO") ~ "Portland Metro"))
+
+mpo %>%
+  group_by(year) %>%
+  distinct(mpo_name,mpo_county) %>%
+  pivot_wider(names_from = year, values_from = mpo_county) %>%
+    view
+
+mpo %>%
+  ggplot() +
+  geom_sf(aes(colour= mpo_name),fill=NA) +
+  facet_wrap(~year)
+
+st_write(mpo,here('data/clean_mpo_boundaries.gpkg'),append=FALSE)
 
 
 
@@ -173,25 +194,31 @@ counties = counties %>%select(year,everything())
 
 st_write(counties,here('data/clean_counties.gpkg'),append=FALSE)
 
-counties = st_read(here('data/clean_counties.gpkg'))
-mpos = st_read(here('data/clean_mpo_boundaries.gpkg'))
+# counties = st_read(here('data/clean_counties.gpkg'))
+# mpos = st_read(here('data/clean_mpo_boundaries.gpkg'))
 
 #only counties that fall into the MPO boundaries; simple way to disentangle
 mpo_counties =
-  st_filter(counties,mpos) %>%
-  select(cname) %>%
+  st_filter(counties,mpo) %>%
+  select(year,cname) %>%
   clean_names() %>%
-  rename(name =cname)
-
+  rename(name =cname) %>%
+  distinct()
+ 
+# mpo_counties %>%
+#   ggplot() +
+#   geom_sf() +
+#   facet_wrap(~year)
 
 #convert census block polygons to centroids with population values
 
 #load_variables(2020,dataset = "pl")# %>% filter(concept=="TOTAL POPULATION") #%>% filter(str_detect(name,"P0"))
 
-#specifying counties to 1. reduce file sizes to 2. keep the API from rejecting the call for being too big
-blocks00 = get_decennial(geography = "block",state = "OR", county=paste0(mpo_counties$name),year = 2000,variables="P001001",geometry = TRUE) #sf1
-blocks10 = get_decennial(geography = "block",state = "OR", county=paste0(mpo_counties$name), year = 2010,variables="P001001",geometry = TRUE) #sf1
-blocks20 = get_decennial(geography = "block",state = "OR", county=paste0(mpo_counties$name), year = 2020,variables='P1_001N',geometry = TRUE) #from redistricting data, pl dataset
+#specifying counties to 1. reduce file sizes to 
+#2. keep the API from rejecting the call for being too big
+blocks00 = get_decennial(geography = "block",state = "OR", county=paste0(unique(mpo_counties$name)),year = 2000,variables="P001001",geometry = TRUE) #sf1
+blocks10 = get_decennial(geography = "block",state = "OR", county=paste0(unique(mpo_counties$name)), year = 2010,variables="P001001",geometry = TRUE) #sf1
+blocks20 = get_decennial(geography = "block",state = "OR", county=paste0(unique(mpo_counties$name)), year = 2020,variables='P1_001N',geometry = TRUE) #from redistricting data, pl dataset
 #same as 2020!
 blocks25 = blocks20
 
@@ -209,8 +236,8 @@ blocks = blocks %>%
 
 st_write(blocks,here('data/clean_blocks/combined_blocks.gpkg'),append=FALSE)
 
-blocks = st_read(here('data/clean_blocks/combined_blocks.gpkg'))
-blocks = st_transform(blocks,6558)
+# blocks = st_read(here('data/clean_blocks/combined_blocks.gpkg'))
+# blocks = st_transform(blocks,6558)
 
 
 # blocks %>%
@@ -224,10 +251,9 @@ blocks = st_transform(blocks,6558)
 blockpoints =
   blocks %>%
   clean_names() %>%
-  mutate(geometry = st_centroid(geom)) %>%
+  mutate(geometry = st_centroid(geometry)) %>%
   select(year,geoid,name,variable,value,geometry) %>%
-  st_transform(4326) %>%
-  st_drop_geometry(geom)
+  st_transform(4326) 
 
 st_write(blockpoints,here('data/clean_blocks/combined_block_centroids.gpkg'),append=FALSE)
 
@@ -246,7 +272,8 @@ st_write(blockpoints,here('data/clean_blocks/combined_block_centroids.gpkg'),app
 
 # tidy up ua objects and combine
 
-
+#From Census Bureau's files:
+#https://www.census.gov/geographies/mapping-files/time-series/geo/carto-boundary-file.2000.html#form-dropdown-1556094155
 ua00 = st_read(here('data/ua2000/ua99_d00.shp'))
 st_crs(ua00) =4326
 ua00 = ua00 %>% filter(str_detect(NAME,"OR"),!str_detect(NAME,", WA"))
@@ -254,17 +281,26 @@ ua00 = ua00 %>% filter(str_detect(NAME,"OR"),!str_detect(NAME,", WA"))
 ua10 = st_read(here('data/ua2010/cb_2012_us_uac10_500k.shp'))
 ua10 = ua10 %>% filter(str_detect(NAME10,", OR"),!str_detect(NAME10,", WA"))
 
-ua20 = st_read(here('data/ua2020/tl_2020_us_uac20.shp'))
-ua20 = ua20 %>% filter(str_detect(NAME20,", OR"),!str_detect(NAME20,", WA"))
+ ua20 = st_read(here('data/ua2020/tl_2020_us_uac20.shp'))
+ ua20 = ua20 %>% filter(str_detect(NAME20,", OR"),!str_detect(NAME20,", WA"))
 
-ua00 = ua00 %>%
+#corrected 2020 most recent to 2025
+# ua25 = st_read(here('data/ua2025/cb_2020_us_ua20_corrected_500k.shp'))
+# ua25 = ua25 %>% filter(str_detect(NAME20,", OR"),!str_detect(NAME20,", WA"))
+
+ua00 =
+  ua00 %>%
   clean_names() %>%
+  filter(lsad_trans == "Urbanized Area") %>%
   select(name,geometry) %>%
   mutate(year="2000") %>%
   st_transform(6558)
 
-ua10 = ua10 %>%
+
+ua10 =
+  ua10 %>%
   clean_names() %>%
+  filter(str_detect(namelsad10,"Urbanized Area")) %>%
   select(name10,geometry) %>%
   rename(name=name10) %>%
   mutate(year="2010") %>%
@@ -272,21 +308,36 @@ ua10 = ua10 %>%
 
 ua20 = ua20 %>%
   clean_names() %>%
+  filter(str_detect(namelsad20,"Urban Area")) %>%
   select(name20,geometry) %>%
   rename(name=name20) %>%
   mutate(year="2020") %>%
   st_transform(6558)
 
-ua25 = ua20 %>%
-  mutate(year="2025")
+# ua25 = ua25 %>%
+#   clean_names() %>%
+#   filter(str_detect(namelsad20,"Urban Area")) %>%
+#   select(name20,geometry) %>%
+#   rename(name=name20) %>%
+#   mutate(year="2025") %>%
+#   st_transform(6558)
 
-uas = rbind(ua00,ua10,ua20,ua25)
+uas = rbind(ua00,ua10,ua20)
 
-uas = uas %>%
-  select(year,everything())
+ua_names = c("Albany","Bend","Corvallis","Eugene","Grants Pass","Medford","Portland","Salem")
+ua_names <- paste(ua_names, collapse = "|")
+uas =
+  uas %>%
+  select(year,everything()) %>%
+  filter(str_detect(name,ua_names))
 
-st_write(uas,here('data/clean_UA_boundaries.gpkg'))
+uas = uas %>% st_make_valid()
+
+st_write(uas,here('data/clean_UA_boundaries.gpkg'),append=FALSE)
 
 
-
+uas %>%
+  ggplot() +
+  geom_sf() +
+  facet_wrap(~year)
 
