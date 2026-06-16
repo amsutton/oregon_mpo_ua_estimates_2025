@@ -212,6 +212,10 @@ build_split_mpo_ua_geom_boundaries(blocks,mpos,uas,counties,year_of_estimates)
 
 #### join geopackages into one ####
 
+#we could've done this in the function above, 
+#but this way we can add other things if we want in the future.
+#just a bit more explicit.
+
 #get all smaller geopackages and build a main geopackage containing all of them
 temp <- list.files(
   path = here(paste0(here("data/clean_mpo_ua_joint_boundaries"))),

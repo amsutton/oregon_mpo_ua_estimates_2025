@@ -181,8 +181,9 @@ mpo_by_co %>%
   arrange(desc(year)) %>%
   pivot_wider(names_from = year,values_from = estimate) %>%
   rename(county_name=cname,
-         population_2000=`2010`, #no data for this 2000!
-         population_2010=`2020`) %>%
+         population_2000=`2000`,
+         population_2010=`2010`,
+         population_2020=`2020`) %>%
   fwrite(here('results/clean/2025_mpo_by_co.csv'))
 
 ua_by_co %>%
@@ -202,9 +203,9 @@ ua_by_co %>%
 mpo_totals %>%
   arrange(desc(year)) %>%
   pivot_wider(names_from = year,values_from = estimate) %>%
-  rename(
-         population_2000=`2010`,
-         population_2010=`2020`) %>%
+  rename(population_2000=`2000`,
+         population_2010=`2010`,
+         population_2020=`2020`) %>%
   mutate(significant_boundary_change = case_when(mpo_name =="Bend" ~"YES",  #verified by hand below
                                                  mpo_name =="Corvallis" ~"NO",
                                                  mpo_name =="Albany" ~"NO",
