@@ -1,16 +1,15 @@
 ua_name,county_name,population_2020,population_2010,population_2000
-"Albany, OR",Benton,9948,7073,
-"Albany, OR",Linn,52133,46804,
-"Albany, OR",Marion,,3100,
-"Bend, OR",Deschutes,106884,83629,57057
-"Corvallis, OR",Benton,66585,61922,58098
-"Eugene, OR",Lane,270098,246973,222969
-"Grants Pass, OR",Jackson,5374,4433,
-"Grants Pass, OR",Josephine,49867,45246,
-"Medford, OR",Jackson,171025,153362,127724
-"Portland, OR--WA",Clackamas,301166,264687,234048
-"Portland, OR--WA",Marion,5926,232,250
-"Portland, OR--WA",Multnomah,804525,724494,648186
-"Portland, OR--WA",Washington,566488,499880,414221
-"Salem, OR",Marion,237160,210451,186918
-"Salem, OR",Polk,30941,25907,19764
+"Albany, OR",Benton,9912,7163,5706
+"Albany, OR",Linn,52162,46860,37520
+"Bend, OR",Deschutes,106865,83124,58074
+"Corvallis, OR",Benton,66566,60049,54487
+"Eugene, OR",Lane,270132,245718,223395
+"Grants Pass, OR",Jackson,5374,4773,4507
+"Grants Pass, OR",Josephine,50007,45659,39436
+"Medford, OR",Jackson,171202,154009,132537
+"Portland, OR--WA",Clackamas,301106,264865,238049
+"Portland, OR--WA",Marion,5916,5376,4257
+"Portland, OR--WA",Multnomah,804481,724521,649844
+"Portland, OR--WA",Washington,566419,498653,415311
+"Salem, OR",Marion,237160,213553,192655
+"Salem, OR",Polk,30928,25788,19436

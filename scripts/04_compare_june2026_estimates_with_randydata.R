@@ -1,3 +1,5 @@
+#might be useful in the future, but not necessary for producing estimates
+
 {
   if (!require("pacman")) install.packages("pacman")
   
@@ -8,15 +10,13 @@
   
   tidycensus::census_api_key(Sys.getenv("CENSUS_API_KEY"), overwrite = FALSE, install = FALSE)
   
-  #DUE: APRIL 24, 2026
   
-  here::i_am('scripts/04_compare_approaches_with_randydata.R')
+  here::i_am('scripts/04_compare_june2026_estimates_with_randydata.R')
 }
 
 
-#compare approach 1, approach 2, and Randy's estimates
+#compare our and Randy's estimates
 
-#load approach 1 data
 temp <- list.files(
   path = here(paste0(here("data/clean_csvs"))),
   pattern = "*\\.csv$",
@@ -26,13 +26,13 @@ mpo_by_co = map_dfr(temp[1:2],
                     fread)
 
 mpo_by_co$descrip = "MPO by County"
-mpo_by_co$source = "Approach 1"
+mpo_by_co$source = "June 2026 estimates"
 
 mpo_totals = map_dfr(temp[3:4],
                      fread)
 
 mpo_totals$descrip = "MPO Totals"
-mpo_totals$source = "Approach 1"
+mpo_totals$source = "June 2026 estimates"
 mpo_totals$cname = NA
 mpo_totals = mpo_totals %>% select(colnames(mpo_by_co))
 
@@ -40,13 +40,13 @@ ua_by_co = map_dfr(temp[5:7],
                    fread)
 
 ua_by_co$descrip = "UA by County"
-ua_by_co$source = "Approach 1"
+ua_by_co$source = "June 2026 estimates"
 
 ua_totals = map_dfr(temp[8:10],
                     fread)
 
 ua_totals$descrip = "UA Totals"
-ua_totals$source = "Approach 1"
+ua_totals$source = "June 2026 estimates"
 ua_totals$cname = NA
 ua_totals = ua_totals %>% select(colnames(ua_by_co)) 
 
@@ -57,48 +57,6 @@ approach1_mpo = approach1_mpo %>% rename(name=mpo_name)
 approach1_ua = approach1_ua %>% rename(name=ua_name)
 
 approach1 = rbind(approach1_mpo,approach1_ua)
-
-#load approach 2 data
-temp <- list.files(
-  path = here(paste0(here("data/clean_csvs/2025 boundaries only"))),
-  pattern = "*\\.csv$",
-  full.names = TRUE)
-
-mpo_by_co = map_dfr(temp[1:3],
-                    fread)
-
-mpo_by_co$descrip = "MPO by County"
-mpo_by_co$source = "Approach 2"
-
-mpo_totals = map_dfr(temp[4:6],
-                     fread)
-
-mpo_totals$descrip = "MPO Totals"
-mpo_totals$source = "Approach 2"
-mpo_totals$cname = NA
-mpo_totals = mpo_totals %>% select(colnames(mpo_by_co))
-
-ua_by_co = map_dfr(temp[7:9],
-                   fread)
-
-ua_by_co$descrip = "UA by County"
-ua_by_co$source = "Approach 2"
-
-ua_totals = map_dfr(temp[10:12],
-                    fread)
-
-ua_totals$descrip = "UA Totals"
-ua_totals$source = "Approach 2"
-ua_totals$cname = NA
-ua_totals = ua_totals %>% select(colnames(ua_by_co)) 
-
-approach2_ua = rbind(ua_totals,ua_by_co)
-approach2_mpo = rbind(mpo_totals,mpo_by_co)
-
-approach2_mpo = approach2_mpo %>% rename(name=mpo_name)
-approach2_ua = approach2_ua %>% rename(name=ua_name)
-
-approach2 = rbind(approach2_mpo,approach2_ua)
 
 #load Randy's data
 
@@ -122,7 +80,7 @@ mpo =
 randy = rbind(mpo,ua)
 
 
-dat = rbind(approach1,approach2,randy)
+dat = rbind(approach1,randy)
 
 
 mpo_totals  =
@@ -175,5 +133,5 @@ uabyco  =
   
 dat = rbind(mpo_totals,mpobyco,ua_totals,uabyco) 
 dat = dat %>% ungroup()
-fwrite(dat,here('data/compare_approaches_with_randydata.csv'))
+fwrite(dat,here('data/compare_june2026_estimates_with_randydata.csv'))
 

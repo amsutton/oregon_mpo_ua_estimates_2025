@@ -1,19 +1,16 @@
-mpo_name,county_name,population_2010,population_2000
-Albany,Benton,9974,
-Albany,Linn,52642,
-Albany,Marion,3418,
-Bend,Deschutes,109272,84336
-Corvallis,Benton,69962,64987
-Corvallis,Linn,0,0
-METRO,Clackamas,307914,262226
-METRO,Marion,5949,
-METRO,Multnomah,809000,728577
-METRO,Washington,570456,494540
-Middle Rogue,Jackson,6312,
-Middle Rogue,Josephine,57480,
-Rogue Valley,Jackson,185936,
-Salem-Keizer Area Transportation Study,Marion,243193,
-Salem-Keizer Area Transportation Study,Polk,33241,
-Eugene/Springfield,Lane,,249750
-Salem/Keizer,Marion,,213994
-Salem/Keizer,Polk,,27604
+mpo_name,county_name,population_2010,population_2000,2000
+Albany,Benton,9974,7194,5733
+Albany,Linn,52642,47319,38027
+Albany,Marion,3418,3174,2547
+Bend,Deschutes,109272,85317,60072
+Corvallis,Benton,69962,63502,57729
+Corvallis,Linn,0,0,2
+Middle Rogue,Jackson,6312,5737,5360
+Middle Rogue,Josephine,57480,53434,46779
+Portland Metro,Clackamas,307914,272341,244656
+Portland Metro,Marion,5949,5397,4287
+Portland Metro,Multnomah,809000,729026,653977
+Portland Metro,Washington,570456,502764,419029
+Rogue Valley,Jackson,185936,167883,147217
+Salem-Keizer,Marion,243193,219815,198306
+Salem-Keizer,Polk,33241,27604,21271

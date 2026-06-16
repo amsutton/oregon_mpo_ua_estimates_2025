@@ -5,9 +5,7 @@
 #Population Research Center
 
 #by: Aja Sutton
-#April 2026
-
-#DUE: APRIL 24, 2026
+#June 2026
 
 #### load packages, set environment ####
 {
@@ -38,8 +36,10 @@
   
   mpos = st_read(here('data/clean_mpo_boundaries.gpkg'))
   mpos = mpos %>%
-    filter(str_detect(mpo_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Middle Rogue|Rogue Valley|METRO|Salem'))  %>%
-    mutate(mpo_name = case_when(str_detect(mpo_name,"Albany") ~ "Albany",
+    filter(year=="2025",
+           str_detect(mpo_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Middle Rogue|Rogue Valley|METRO|Salem'))  %>%
+    mutate(year ="2020",
+           mpo_name = case_when(str_detect(mpo_name,"Albany") ~ "Albany",
                                 str_detect(mpo_name,"Bend") ~ "Bend",
                                 str_detect(mpo_name,"Central Lane") ~ "Central Lane",
                                 str_detect(mpo_name,"Corvallis") ~ "Corvallis",
@@ -53,8 +53,9 @@
   
   uas = st_read(here('data/clean_UA_boundaries.gpkg'))
   uas = uas %>%
-    rename(ua_name = name) %>%
-    filter(str_detect(ua_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Medford|Portland|Salem'))
+    filter(year=="2025",
+           str_detect(ua_name,'Albany|Bend|Corvallis|Eugene|Grants Pass|Medford|Portland|Salem')) %>%
+    mutate(year = "2020")
 }
 
 #please note the st_write() command has append=FALSE to overwrite previous version of the gpkg! 
@@ -75,16 +76,13 @@ build_split_mpo_ua_geom_boundaries = function(blocks,mpos,uas,counties,yearid){
     filter(year==yearid) %>%
     st_as_sf()
   uas = uas %>%
-    filter(year==yearid) %>%
+    filter(year=="2020") %>%
     st_as_sf()
   mpos = mpos %>%
-    filter(year==yearid) %>%
+    filter(year=="2020") %>%
     st_as_sf()
   
   
-  if(yearid!="2000"){ #because we don't have any MPO data for 2000 as of yet
-    
-    
     if(FALSE %in% st_is_valid(mpos)) mpos = st_make_valid(mpos)
     if(FALSE %in% st_is_valid(mpos)) stop("invalid MPO geometry persists")
     
@@ -120,11 +118,6 @@ build_split_mpo_ua_geom_boundaries = function(blocks,mpos,uas,counties,yearid){
       st_collection_extract(type = "POLYGON") %>%
       st_transform(4326) %>%
       st_write(here(paste0('data/clean_mpo_ua_joint_boundaries/mpo_totals_',yearid,'.gpkg')),append=FALSE)
-    
-    
-  }
-    
-  if(yearid!="2025"){ #because UAs don't have a 2025 update
 
     #blocks in UA boundaries
     ua_totals = st_join(uas,blocks)
@@ -159,12 +152,8 @@ build_split_mpo_ua_geom_boundaries = function(blocks,mpos,uas,counties,yearid){
       st_collection_extract(type = "POLYGON") %>%
       st_transform(4326) %>%
       st_write(here(paste0('data/clean_mpo_ua_joint_boundaries/ua_by_co_',yearid,'.gpkg')),append=FALSE)
-    
-  }
-  
   
 }
-
 
 
 #N.B.: If during the below loop you see that the geometry type after writing each
@@ -176,8 +165,7 @@ build_split_mpo_ua_geom_boundaries = function(blocks,mpos,uas,counties,yearid){
 #using st_collection_extract(x,type = "POLYGON")
 
 
-#this takes a long time to run, and a big memory.
-years = c("2000","2010","2020","2025")
+years = c("2000","2010","2020")
 
 for (i in 1:length(years)){
   print(years[i])
@@ -206,6 +194,8 @@ firstlayer = st_read(temp[1])
 firstlayer %>%
   st_write(here('results/clean/2025_oregon_mpo_ua_boundaries.gpkg'),layer=paste0(layernames[1]),append=FALSE)
 
+st_layers(here('results/clean/2025_oregon_mpo_ua_boundaries.gpkg'))
+
 layernames = layernames[2:length(layernames)]
 temp = temp[2:length(temp)]
 
@@ -220,7 +210,6 @@ for (i in 1:length(temp)){
 
 #looks good; crs = 4326 for simplicity
 st_layers(here('results/clean/2025_oregon_mpo_ua_boundaries.gpkg'))
-
 temp = st_read(here('data/clean_mpo_ua_joint_boundaries/mpo_by_co_2020.gpkg'),layer='mpo_by_co_2020')
 glimpse(temp)
 

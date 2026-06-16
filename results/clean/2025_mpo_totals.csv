@@ -1,10 +1,8 @@
-mpo_name,population_2010,population_2000,significant_boundary_change
-Albany,66034,,YES
-Bend,109272,84336,YES
-Corvallis,69962,64987,YES
-METRO,1693319,1485343,
-Middle Rogue,63792,,YES
-Rogue Valley,185936,,NO
-Salem-Keizer Area Transportation Study,276434,,
-Eugene/Springfield,,249750,YES
-Salem/Keizer,,241598,
+mpo_name,population_2010,population_2000,2000,significant_boundary_change
+Albany,66034,57687,46307,NO
+Bend,109272,85317,60072,YES
+Corvallis,69962,63502,57731,NO
+Middle Rogue,63792,59171,52139,NO
+Portland Metro,1693319,1509528,1321949,NO
+Rogue Valley,185936,167883,147217,NO
+Salem-Keizer,276434,247419,219577,NO
